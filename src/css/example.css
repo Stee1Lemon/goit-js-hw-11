@@ -1,4 +1,18 @@
+img {
+  width: 100%;
+}
+
 .gallery {
   display: flex;
   gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.photo-card {
+  width: 400px;
+}
+
+.image-card {
+  width: 400px;
 }

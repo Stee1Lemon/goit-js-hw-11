@@ -55,3 +55,4 @@ function renderImages(images) {
   refs.galleryEl.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
 }
+// go

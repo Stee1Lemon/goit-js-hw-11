@@ -8,12 +8,15 @@ const refs = {
   searchFormEl: document.querySelector('#search-form'),
   galleryEl: document.querySelector('.gallery'),
   loadMoreBtnEl: document.querySelector('.load-more'),
+  footerEl: document.querySelector('.footer'),
 };
 
 refs.searchFormEl.addEventListener('submit', findImagesByName);
 refs.loadMoreBtnEl.addEventListener('click', showMoreImages);
 
 let pageCount = 1;
+let totalHits = 0;
+let hits = 0;
 
 const lightbox = new SimpleLightbox('.gallery a');
 function findImagesByName(event) {
@@ -30,6 +33,9 @@ function findImagesByName(event) {
           'Sorry, there are no images matching your search query. Please try again.'
         );
       }
+      totalHits = response.data.totalHits;
+      hits += response.data.hits.length;
+      Notify.success(`Hooray! We found ${totalHits} images.`);
       renderImages(response.data.hits);
     })
     .catch();
@@ -62,14 +68,22 @@ function renderImages(images) {
     .join('');
 
   refs.galleryEl.insertAdjacentHTML('beforeend', markup);
+  refs.footerEl.classList.remove('is-hidden');
   lightbox.refresh();
 }
 
 function showMoreImages() {
+  if (hits >= totalHits) {
+    refs.footerEl.classList.add('is-hidden');
+    return Notify.info(
+      `We're sorry, but you've reached the end of search results.`
+    );
+  }
   pageCount += 1;
   const name = refs.searchFormEl.searchQuery.value;
   fetchMoreImages(name, pageCount)
     .then(response => {
+      hits += response.data.hits.length;
       renderImages(response.data.hits);
     })
     .catch();

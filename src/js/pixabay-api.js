@@ -12,7 +12,7 @@ export function fetchImagesByName(name) {
       safesearch: 'true',
       q: name,
       page: 1,
-      per_page: 3,
+      per_page: 40,
     },
   });
 }
@@ -26,7 +26,7 @@ export function fetchMoreImages(name, pageCount) {
       safesearch: 'true',
       q: name,
       page: pageCount,
-      per_page: 3,
+      per_page: 40,
     },
   });
 }

@@ -1,11 +1,16 @@
-<form class="search-form" id="search-form">
-  <input
-    type="text"
-    name="searchQuery"
-    autocomplete="off"
-    placeholder="Search images..."
-  />
-  <button type="submit">Search</button>
-</form>
+<div class="header">
+  <form class="search-form" id="search-form">
+    <input
+      type="text"
+      name="searchQuery"
+      autocomplete="off"
+      placeholder="Search images..."
+    />
+    <button class="submit-btn" type="submit">Search</button>
+  </form>
+</div>
+
 <div class="gallery"></div>
-<button type="button" class="load-more">Load more</button>
+<div class="header footer is-hidden">
+  <button type="button" class="load-more submit-btn">Load more</button>
+</div>

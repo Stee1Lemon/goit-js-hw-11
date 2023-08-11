@@ -2,7 +2,6 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { fetchImagesByName, fetchMoreImages } from './pixabay-api';
-// import InfiniteScroll from 'infinite-scroll';
 
 const refs = {
   searchFormEl: document.querySelector('#search-form'),
@@ -11,55 +10,74 @@ const refs = {
   footerEl: document.querySelector('.footer'),
 };
 
-refs.searchFormEl.addEventListener('submit', findImagesByName);
-refs.loadMoreBtnEl.addEventListener('click', showMoreImages);
-
-let pageCount = 1;
-let totalHits = 0;
-let hits = 0;
+refs.searchFormEl.addEventListener('submit', handleImagesByName);
+refs.loadMoreBtnEl.addEventListener('click', handleMoreImagesS);
 
 const lightbox = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
 });
+let imgToFind = null;
 
-function findImagesByName(event) {
-  event.preventDefault();
-
-  const name = event.currentTarget.searchQuery.value.trim();
-  pageCount = 1;
-  totalHits = 0;
-  hits = 0;
-  refs.galleryEl.innerHTML = '';
-  refs.footerEl.classList.add('is-hidden');
-
-  if (name === '') {
-    return;
+class ImagesToFind {
+  constructor(name) {
+    this.name = name;
+    this.pageCount = 1;
+    this.totalHits = 0;
+    this.hits = 0;
   }
 
-  fetchImagesByName(name)
-    .then(response => {
-      if (response.data.hits.length === 0) {
-        return Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-      }
-      totalHits = response.data.totalHits;
-      hits += response.data.hits.length;
-
-      if (totalHits > 40) {
-        refs.footerEl.classList.remove('is-hidden');
-      }
-
-      Notify.success(`Hooray! We found ${totalHits} images.`);
-      renderImages(response.data.hits);
-    })
-    .catch(error => console.log(error.message));
-}
-
-function renderImages(images) {
-  const markup = images
-    .map(image => {
-      return `
+  async findImages(objName) {
+    objName = this.name;
+    try {
+      const obj = await fetchImagesByName(objName);
+      this.totalHits = obj.data.totalHits;
+      this.hits += obj.data.hits.length;
+      this.isFieldEmpty(this.hits, this.totalHits);
+      this.isOnlyOnePageOfImages(this.totalHits);
+      this.renderImages(obj.data.hits);
+    } catch (err) {
+      console.log(err.message);
+      Notify.failure(err.message);
+    }
+  }
+  async handleMoreImages() {
+    try {
+      this.pageCount += 1;
+      const nextPage = await fetchMoreImages(this.name, this.pageCount);
+      this.hits += nextPage.data.hits.length;
+      this.renderImages(nextPage.data.hits);
+      this.doSmoothScroll();
+      this.isThereEndOfImages();
+    } catch (err) {
+      console.log(err.message);
+      Notify.failure(err.message);
+    }
+  }
+  isFieldEmpty(field, totalHits) {
+    if (field === 0) {
+      return Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+    }
+    Notify.success(`Hooray! We found ${totalHits} images.`);
+  }
+  isOnlyOnePageOfImages(number) {
+    if (number > 40) {
+      refs.footerEl.classList.remove('is-hidden');
+    }
+  }
+  isThereEndOfImages() {
+    if (this.hits >= this.totalHits) {
+      refs.footerEl.classList.add('is-hidden');
+      return Notify.info(
+        `We're sorry, but you've reached the end of search results.`
+      );
+    }
+  }
+  renderImages(images) {
+    const markup = images
+      .map(image => {
+        return `
     <div class="photo-card">
         <div class="image-card"><a href ="${image.largeImageURL}">
            <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy" />
@@ -79,38 +97,39 @@ function renderImages(images) {
             </p>
         </div>
     </div>`;
-    })
-    .join('');
+      })
+      .join('');
 
-  refs.galleryEl.insertAdjacentHTML('beforeend', markup);
-  lightbox.refresh();
+    refs.galleryEl.insertAdjacentHTML('beforeend', markup);
+    lightbox.refresh();
+  }
+  doSmoothScroll() {
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
+
+    window.scrollBy({
+      top: cardHeight * 1.7,
+      behavior: 'smooth',
+    });
+  }
 }
 
-function showMoreImages() {
-  pageCount += 1;
-  const name = refs.searchFormEl.searchQuery.value;
-  fetchMoreImages(name, pageCount)
-    .then(response => {
-      hits += response.data.hits.length;
-      renderImages(response.data.hits);
-      makeSmoothScroll();
-      if (hits >= totalHits) {
-        refs.footerEl.classList.add('is-hidden');
-        return Notify.info(
-          `We're sorry, but you've reached the end of search results.`
-        );
-      }
-    })
-    .catch(error => console.log(error.message));
+function handleImagesByName(event) {
+  event.preventDefault();
+  const name = event.currentTarget.searchQuery.value.trim();
+  if (name === '') {
+    return;
+  }
+
+  refs.galleryEl.innerHTML = '';
+  refs.footerEl.classList.add('is-hidden');
+
+  imgToFind = new ImagesToFind(name);
+  imgToFind.findImages();
+  return imgToFind;
 }
 
-function makeSmoothScroll() {
-  const { height: cardHeight } = document
-    .querySelector('.gallery')
-    .firstElementChild.getBoundingClientRect();
-
-  window.scrollBy({
-    top: cardHeight * 1.7,
-    behavior: 'smooth',
-  });
+function handleMoreImagesS() {
+  imgToFind.handleMoreImages();
 }

@@ -43,7 +43,7 @@ function findImagesByName(event) {
       hits += response.data.hits.length;
 
       if (totalHits > 40) {
-        refs.footerEl.classList.remove('.is-hidden');
+        refs.footerEl.classList.remove('is-hidden');
         console.log(totalHits);
       }
 
@@ -80,16 +80,6 @@ function renderImages(images) {
     .join('');
 
   refs.galleryEl.insertAdjacentHTML('beforeend', markup);
-
-  // const { height: cardHeight } = document
-  //   .querySelector('.gallery')
-  //   .firstElementChild.getBoundingClientRect();
-
-  // window.scrollBy({
-  //   top: cardHeight * 2,
-  //   behavior: 'smooth',
-  // });
-
   lightbox.refresh();
 }
 
@@ -106,8 +96,20 @@ function showMoreImages() {
         );
       }
       renderImages(response.data.hits);
+      makeSmoothScroll();
     })
     .catch(error => console.log(error.message));
+}
+
+function makeSmoothScroll() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 1.7,
+    behavior: 'smooth',
+  });
 }
 
 // function isThereImagesForMoreOnePage(number) {

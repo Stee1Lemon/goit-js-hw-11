@@ -19,12 +19,18 @@ let totalHits = 0;
 let hits = 0;
 
 const lightbox = new SimpleLightbox('.gallery a');
+
 function findImagesByName(event) {
   event.preventDefault();
 
-  const name = event.currentTarget.searchQuery.value;
+  const name = event.currentTarget.searchQuery.value.trim();
   pageCount = 1;
   refs.galleryEl.innerHTML = '';
+  refs.footerEl.classList.add('is-hidden');
+
+  if (name === '') {
+    return;
+  }
 
   fetchImagesByName(name)
     .then(response => {
@@ -35,10 +41,16 @@ function findImagesByName(event) {
       }
       totalHits = response.data.totalHits;
       hits += response.data.hits.length;
+
+      if (totalHits > 40) {
+        refs.footerEl.classList.remove('.is-hidden');
+        console.log(totalHits);
+      }
+
       Notify.success(`Hooray! We found ${totalHits} images.`);
       renderImages(response.data.hits);
     })
-    .catch();
+    .catch(error => console.log(error.message));
 }
 
 function renderImages(images) {
@@ -68,26 +80,42 @@ function renderImages(images) {
     .join('');
 
   refs.galleryEl.insertAdjacentHTML('beforeend', markup);
-  refs.footerEl.classList.remove('is-hidden');
+
+  // const { height: cardHeight } = document
+  //   .querySelector('.gallery')
+  //   .firstElementChild.getBoundingClientRect();
+
+  // window.scrollBy({
+  //   top: cardHeight * 2,
+  //   behavior: 'smooth',
+  // });
+
   lightbox.refresh();
 }
 
 function showMoreImages() {
-  if (hits >= totalHits) {
-    refs.footerEl.classList.add('is-hidden');
-    return Notify.info(
-      `We're sorry, but you've reached the end of search results.`
-    );
-  }
   pageCount += 1;
   const name = refs.searchFormEl.searchQuery.value;
   fetchMoreImages(name, pageCount)
     .then(response => {
       hits += response.data.hits.length;
+      if (hits >= totalHits) {
+        refs.footerEl.classList.add('is-hidden');
+        return Notify.info(
+          `We're sorry, but you've reached the end of search results.`
+        );
+      }
       renderImages(response.data.hits);
     })
-    .catch();
+    .catch(error => console.log(error.message));
 }
+
+// function isThereImagesForMoreOnePage(number) {
+//   if (number < 40) {
+//     refs.footerEl.classList.remove('.is-hidden');
+//   }
+//   return;
+// }
 
 // function turnOnInfScroll() {
 //   pageCount += 1;

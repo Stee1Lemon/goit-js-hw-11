@@ -18,7 +18,9 @@ let pageCount = 1;
 let totalHits = 0;
 let hits = 0;
 
-const lightbox = new SimpleLightbox('.gallery a');
+const lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+});
 
 function findImagesByName(event) {
   event.preventDefault();

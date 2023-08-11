@@ -25,6 +25,8 @@ function findImagesByName(event) {
 
   const name = event.currentTarget.searchQuery.value.trim();
   pageCount = 1;
+  totalHits = 0;
+  hits = 0;
   refs.galleryEl.innerHTML = '';
   refs.footerEl.classList.add('is-hidden');
 
@@ -44,7 +46,6 @@ function findImagesByName(event) {
 
       if (totalHits > 40) {
         refs.footerEl.classList.remove('is-hidden');
-        console.log(totalHits);
       }
 
       Notify.success(`Hooray! We found ${totalHits} images.`);
@@ -89,14 +90,14 @@ function showMoreImages() {
   fetchMoreImages(name, pageCount)
     .then(response => {
       hits += response.data.hits.length;
+      renderImages(response.data.hits);
+      makeSmoothScroll();
       if (hits >= totalHits) {
         refs.footerEl.classList.add('is-hidden');
         return Notify.info(
           `We're sorry, but you've reached the end of search results.`
         );
       }
-      renderImages(response.data.hits);
-      makeSmoothScroll();
     })
     .catch(error => console.log(error.message));
 }
@@ -111,24 +112,3 @@ function makeSmoothScroll() {
     behavior: 'smooth',
   });
 }
-
-// function isThereImagesForMoreOnePage(number) {
-//   if (number < 40) {
-//     refs.footerEl.classList.remove('.is-hidden');
-//   }
-//   return;
-// }
-
-// function turnOnInfScroll() {
-//   pageCount += 1;
-//   const name = refs.searchFormEl.searchQuery.value;
-//   console.log(name);
-//   let infScroll = new InfiniteScroll(refs.galleryEl, {
-//     path: fetchMoreImages(name, pageCount)
-//       .then(response => {
-//         renderImages(response.data.hits);
-//         console.log('show more img');
-//       })
-//       .catch(),
-//   });
-// }
